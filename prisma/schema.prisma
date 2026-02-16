@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Order {
+  id             String    @id @default(cuid())
+  email          String
+  name           String
+  phone          String?
+  productType    String    // BOOK | COACHING
+  productName    String
+  amount         Float
+  currency       String    // KES | USD
+  paymentMethod  String    // STRIPE | MPESA
+  paymentId      String?   // Stripe session ID or IntaSend invoice ID
+  status         String    @default("PENDING") // PENDING | PAID | FAILED
+  downloadToken  String?   @unique
+  tokenExpiresAt DateTime?
+  calendlyUrl    String?   // For coaching sessions - the booking link sent after payment
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
