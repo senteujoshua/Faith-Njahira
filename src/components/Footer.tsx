@@ -59,8 +59,7 @@ export default function Footer() {
               {[
                 { href: "/about", label: "About Faith" },
                 { href: "/publications", label: "Publications" },
-                { href: "/shop", label: "Bookshop" },
-                { href: "/coaching", label: "Coaching" },
+                { href: "/shop", label: "Shop" },
                 { href: "/consulting", label: "Consulting" },
                 { href: "/media", label: "Media & Press" },
                 { href: "/contact", label: "Contact" },
