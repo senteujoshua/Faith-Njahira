@@ -19,6 +19,11 @@ export async function PUT(
       slug: data.slug,
       fileName: data.fileName,
       description: data.description || null,
+      publisher: data.publisher || null,
+      coverImage: data.coverImage || null,
+      priceUSD: data.priceUSD ? parseFloat(data.priceUSD) : null,
+      priceKES: data.priceKES ? parseFloat(data.priceKES) : null,
+      order: parseInt(data.order) || 0,
       isActive: data.isActive,
     },
   });

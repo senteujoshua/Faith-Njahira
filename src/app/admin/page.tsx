@@ -2,16 +2,28 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
-  const [orderCount, bookCount, coachingCount, recentOrders] =
-    await Promise.all([
-      prisma.order.count(),
-      prisma.bookResource.count(),
-      prisma.coachingSession.count(),
-      prisma.order.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 5,
-      }),
-    ]);
+  const [
+    orderCount,
+    bookCount,
+    coachingCount,
+    publicationCount,
+    mediaCount,
+    clientCount,
+    eventCount,
+    recentOrders,
+  ] = await Promise.all([
+    prisma.order.count(),
+    prisma.bookResource.count(),
+    prisma.coachingSession.count(),
+    prisma.publication.count(),
+    prisma.mediaItem.count(),
+    prisma.client.count(),
+    prisma.event.count(),
+    prisma.order.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+  ]);
 
   const paidOrders = await prisma.order.count({
     where: { status: "PAID" },
@@ -22,25 +34,41 @@ export default async function AdminDashboard() {
       label: "Total Orders",
       value: orderCount,
       href: "/admin/orders",
-      color: "bg-teal",
     },
     {
       label: "Paid Orders",
       value: paidOrders,
       href: "/admin/orders",
-      color: "bg-green-600",
     },
     {
       label: "Books",
       value: bookCount,
       href: "/admin/books",
-      color: "bg-gold",
     },
     {
       label: "Coaching Sessions",
       value: coachingCount,
       href: "/admin/coaching",
-      color: "bg-slate",
+    },
+    {
+      label: "Publications",
+      value: publicationCount,
+      href: "/admin/publications",
+    },
+    {
+      label: "Media Items",
+      value: mediaCount,
+      href: "/admin/media",
+    },
+    {
+      label: "Clients",
+      value: clientCount,
+      href: "/admin/clients",
+    },
+    {
+      label: "Events",
+      value: eventCount,
+      href: "/admin/events",
     },
   ];
 
@@ -51,7 +79,7 @@ export default async function AdminDashboard() {
       </h1>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-6 mb-10">
         {stats.map((stat) => (
           <Link
             key={stat.label}

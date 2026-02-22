@@ -8,7 +8,7 @@ export async function GET() {
   }
 
   const books = await prisma.bookResource.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: { order: "asc" },
   });
   return NextResponse.json(books);
 }
@@ -23,8 +23,13 @@ export async function POST(request: NextRequest) {
     data: {
       title: data.title,
       slug: data.slug,
-      fileName: data.fileName,
+      fileName: data.fileName || "",
       description: data.description || null,
+      publisher: data.publisher || null,
+      coverImage: data.coverImage || null,
+      priceUSD: data.priceUSD ? parseFloat(data.priceUSD) : null,
+      priceKES: data.priceKES ? parseFloat(data.priceKES) : null,
+      order: parseInt(data.order) || 0,
       isActive: data.isActive ?? true,
     },
   });

@@ -51,7 +51,7 @@ export default function AboutPage() {
                 Disability Studies Scholar &middot; Inclusion Specialist
               </p>
               <p className="font-body text-lg text-cream/60 mb-8">
-                Global Consultant &middot; Researcher &middot; Filmmaker
+                Global Consultant &middot; Researcher &middot; Co-producer
               </p>
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <Link
@@ -166,24 +166,16 @@ export default function AboutPage() {
           <h2 className="font-heading text-3xl font-bold text-teal mb-4">The Full Story</h2>
           <div className="section-divider mb-10" />
 
+          <p className="font-body text-warm-gray text-sm uppercase tracking-widest mb-6">Co-producer, Lead Cast</p>
           <div className="font-body text-slate text-lg leading-relaxed space-y-6">
             <p>
-              Faith Njah&#x0129;ra Wangar&#x01D0; is a disability studies scholar and inclusion specialist who loves teaching, research and supporting others to improve their practice of disability inclusion. Njahira has muscular dystrophy and moves through the world on a wheelchair.
+              Faith Njah&icirc;ra, pronouns (She/Her), is a disabled wheelchair-using African woman with muscular dystrophy committed to research and community work guided by disability justice, feminism and anti-ableism. Faith is currently an independent researcher and consultant in the areas of disability, sexuality, health &amp; education working with intersectional approaches.
             </p>
             <p>
-              She is a graduate of the Bachelors of Education (Special Needs Education) specialising in learning disabilities from Kenyatta University and the Functional and Educational Assessment Certificate from KISE. Njahira did her Masters in Teaching and Curriculum specialising in disability studies at Syracuse University in the United States. She has additional training in Grief Literacy from Being Here, Human.
+              She founded Muscular Dystrophy Society Kenya in 2013 as a support platform for those with muscular dystrophy and their loved ones. She has previously worked with national, regional and international organisations supporting in their disability approaches and disability inclusion in their work. Faith holds a graduate degree from Syracuse University through the Open Society Foundation&apos;s scholarship on inclusive education. She has served as visiting faculty on centering disability at organisational and learning institution&apos;s levels.
             </p>
             <p>
-              She is a global disability consultant and researcher who has been involved in the disability movement for a long time now. Through her company, <strong>Njahira Wangari Consulting</strong>, she supports institutions and individuals seeking to better understand disability and grow in their disability consciousness through targeted training and technical support.
-            </p>
-            <p>
-              After running an informal support group for muscular dystrophy since 2013, she is currently the founder and co-executive director of <strong>Zaidi ya Misuli Resource Centre</strong>, which seeks to demystify, research and support muscular dystrophy along with other disabilities through education, training and research towards wholeness.
-            </p>
-            <p>
-              Faith is also a filmmaker. Her documentary <em>For All the Brilliant Conversations</em> has been screened at film festivals and academic settings, exploring disability, identity, and the transformative power of dialogue.
-            </p>
-            <p>
-              Her academic work has been published by Duke University Press as part of the <em>Crip Genealogies</em> collection, and by Routledge in <em>Activating Arts to Understand Disability in Africa</em> (2025). She has contributed technical reports including the UN Independent Expert on Albinism animation series, and has delivered guest lectures at institutions including Colgate University and the Centre for Human Rights at the University of Pretoria.
+              To occupy her time, she offers pro-bono and paid services to organisations and institutions at various levels working in her areas of interest. Through all her work, she strives to ensure that the world doesn&apos;t have the pleasure of imagining that diversity doesn&apos;t exist. Music, nature, the warmth of the sun and time with loved ones bring her joy.
             </p>
           </div>
         </div>
@@ -200,6 +192,49 @@ export default function AboutPage() {
           <p className="font-body text-cream/70">
             Faith&apos;s work is guided by an intersectional framework that recognizes how disability, gender, race, sexuality, and geography shape access to justice and dignity.
           </p>
+        </div>
+      </section>
+
+      {/* Connect */}
+      <section className="bg-cream-lightest py-16">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8">
+          <h2 className="font-heading text-3xl font-bold text-teal mb-4 text-center">Connect</h2>
+          <div className="section-divider mx-auto mb-10" />
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="https://zaidiyamisuli.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-6 py-3 bg-white border border-cream rounded-full font-body text-sm font-semibold text-teal hover:border-gold hover:text-gold transition-all duration-300 shadow-sm"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+              </svg>
+              Zaidi ya Misuli
+            </a>
+            <a
+              href="https://www.instagram.com/njahirawangariconsulting"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-6 py-3 bg-white border border-cream rounded-full font-body text-sm font-semibold text-teal hover:border-gold hover:text-gold transition-all duration-300 shadow-sm"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+              @njahirawangariconsulting
+            </a>
+            <a
+              href="https://www.linkedin.com/company/njahira-wangari-co-ltd/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 px-6 py-3 bg-white border border-cream rounded-full font-body text-sm font-semibold text-teal hover:border-gold hover:text-gold transition-all duration-300 shadow-sm"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              Njahira Wangari Consulting
+            </a>
+          </div>
         </div>
       </section>
 

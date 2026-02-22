@@ -6,11 +6,10 @@ import { usePathname } from "next/navigation";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/publications", label: "Publications" },
+  { href: "/about", label: "Njahira" },
+  { href: "/knowledge-production", label: "Knowledge Production" },
+  { href: "/my-work", label: "My Work" },
   { href: "/shop", label: "Shop" },
-  { href: "/consulting", label: "Consulting" },
-  { href: "/media", label: "Media" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -70,7 +69,7 @@ export default function Header() {
               </Link>
             ))}
             <Link
-              href="/consulting#book"
+              href="/my-work"
               className="ml-4 px-6 py-2.5 bg-gold text-white text-sm font-body font-medium tracking-wide rounded-full hover:bg-gold-dark transition-colors duration-200"
             >
               Work With Me
@@ -131,7 +130,7 @@ export default function Header() {
           ))}
           <div className="pt-4">
             <Link
-              href="/consulting#book"
+              href="/my-work"
               className="block text-center px-6 py-3 bg-gold text-white font-body font-medium rounded-full hover:bg-gold-dark transition-colors duration-200"
             >
               Work With Me

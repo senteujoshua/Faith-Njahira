@@ -41,14 +41,25 @@ export async function GET(
     );
   }
 
-  // Serve the file from /public/downloads/
-  // The file name is derived from the product name (slugified)
-  const fileName = order.productName
+  // Look up the book resource to get the actual file URL
+  const slug = order.productName
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    + ".pdf";
+    .replace(/(^-|-$)/g, "");
 
+  const book = await prisma.bookResource.findFirst({
+    where: {
+      OR: [{ slug }, { title: order.productName }],
+    },
+  });
+
+  // If the book has a cloud URL (Vercel Blob), redirect to it
+  if (book?.fileName && book.fileName.startsWith("http")) {
+    return NextResponse.redirect(book.fileName);
+  }
+
+  // Fall back to serving from /public/downloads/
+  const fileName = (book?.fileName || slug + ".pdf");
   const filePath = path.join(process.cwd(), "public", "downloads", fileName);
 
   try {
@@ -61,21 +72,9 @@ export async function GET(
       },
     });
   } catch {
-    // If exact file not found, try a generic download file
-    const fallbackPath = path.join(process.cwd(), "public", "downloads", "book.pdf");
-    try {
-      const fallbackBuffer = await fs.readFile(fallbackPath);
-      return new NextResponse(fallbackBuffer, {
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="${fileName}"`,
-        },
-      });
-    } catch {
-      return NextResponse.json(
-        { error: "File not found. Please contact support." },
-        { status: 404 }
-      );
-    }
+    return NextResponse.json(
+      { error: "File not found. Please contact support." },
+      { status: 404 }
+    );
   }
 }

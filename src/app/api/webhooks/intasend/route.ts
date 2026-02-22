@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendDownloadEmail, sendCoachingConfirmationEmail } from "@/lib/email";
+import { sendDownloadEmail, sendCoachingConfirmationEmail, sendEventConfirmationEmail } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,6 +52,46 @@ export async function POST(req: NextRequest) {
             order.productName,
             calendlyUrl
           );
+        } else if (order.productType === "EVENT" && order.tierId) {
+          const tier = await prisma.ticketTier.findUnique({
+            where: { id: order.tierId },
+            include: {
+              event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } },
+            },
+          });
+
+          const existingReg = await prisma.eventRegistration.findUnique({
+            where: { orderId: order.id },
+          });
+
+          if (tier && !existingReg) {
+            await prisma.eventRegistration.create({
+              data: {
+                orderId: order.id,
+                eventId: tier.eventId,
+                tierId: order.tierId,
+                seatCount: 1,
+              },
+            });
+
+            await sendEventConfirmationEmail({
+              to: order.email,
+              name: order.name,
+              eventTitle: tier.event.title,
+              tierName: tier.name,
+              seatCount: 1,
+              orderRef: order.id,
+              meetingLink: tier.event.meetingLink,
+              meetingDetails: tier.event.meetingDetails,
+              sessions: tier.event.sessions.map((s) => ({
+                sessionNumber: s.sessionNumber,
+                title: s.title,
+                startTime: s.startTime,
+                endTime: s.endTime,
+                timezone: s.timezone,
+              })),
+            });
+          }
         }
       } catch (emailError) {
         console.error("Failed to send email:", emailError);
