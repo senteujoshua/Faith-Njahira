@@ -11,6 +11,18 @@ interface InstallmentSub {
   status: string;
 }
 
+interface EmailLogEntry {
+  id: string;
+  type: string;
+  to: string;
+  subject: string;
+  status: string;
+  resendId: string | null;
+  error: string | null;
+  sentAt: string | null;
+  createdAt: string;
+}
+
 interface OrderDetail {
   id: string;
   email: string;
@@ -36,6 +48,7 @@ interface OrderDetail {
     seatCount: number;
     eventId: string;
   } | null;
+  emails: EmailLogEntry[];
 }
 
 export default function AdminOrderDetailPage() {
@@ -44,6 +57,7 @@ export default function AdminOrderDetailPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [refunding, setRefunding] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -62,6 +76,31 @@ export default function AdminOrderDetailPage() {
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  const handleResend = async (emailType: string) => {
+    if (!order) return;
+    setResending(emailType);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/emails`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailType }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Resend failed");
+      } else {
+        setSuccess(`${emailType} email resent successfully.`);
+        fetchOrder();
+      }
+    } catch {
+      setError("Network error — email may not have been sent.");
+    } finally {
+      setResending(null);
+    }
+  };
 
   const handleRefund = async () => {
     if (!order) return;
@@ -282,6 +321,78 @@ export default function AdminOrderDetailPage() {
           </div>
         )}
 
+        {/* Email Logs */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-heading text-base font-semibold text-slate">Emails</h2>
+            {order.status === "PAID" && (
+              <div className="flex gap-2">
+                {order.productType === "BOOK" && (
+                  <button
+                    onClick={() => handleResend("DOWNLOAD")}
+                    disabled={resending === "DOWNLOAD"}
+                    className="px-3 py-1.5 text-xs font-body font-medium bg-teal text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  >
+                    {resending === "DOWNLOAD" ? "Sending..." : "Resend Download"}
+                  </button>
+                )}
+                {order.productType === "COACHING" && (
+                  <button
+                    onClick={() => handleResend("COACHING")}
+                    disabled={resending === "COACHING"}
+                    className="px-3 py-1.5 text-xs font-body font-medium bg-teal text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  >
+                    {resending === "COACHING" ? "Sending..." : "Resend Coaching Email"}
+                  </button>
+                )}
+                {order.productType === "EVENT" && (
+                  <button
+                    onClick={() => handleResend("CONFIRMATION")}
+                    disabled={resending === "CONFIRMATION"}
+                    className="px-3 py-1.5 text-xs font-body font-medium bg-teal text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  >
+                    {resending === "CONFIRMATION" ? "Sending..." : "Resend Confirmation"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          {order.emails.length === 0 ? (
+            <p className="font-body text-sm text-warm-gray">No emails recorded for this order.</p>
+          ) : (
+            <div className="space-y-2">
+              {order.emails.map((log) => {
+                const statusColor =
+                  log.status === "SENT"
+                    ? "bg-green-100 text-green-700"
+                    : log.status === "FAILED"
+                    ? "bg-red-100 text-red-700"
+                    : log.status === "SUPERSEDED"
+                    ? "bg-gray-100 text-gray-500"
+                    : "bg-yellow-100 text-yellow-700";
+                return (
+                  <div key={log.id} className="flex items-start justify-between gap-4 py-2 border-b border-gray-100 last:border-0">
+                    <div className="min-w-0">
+                      <p className="font-body text-sm text-slate font-medium">{log.type}</p>
+                      <p className="font-body text-xs text-warm-gray truncate">{log.subject}</p>
+                      {log.error && (
+                        <p className="font-body text-xs text-red-600 mt-0.5">{log.error}</p>
+                      )}
+                      <p className="font-body text-xs text-warm-gray mt-0.5">
+                        {new Date(log.createdAt).toLocaleString()}
+                        {log.sentAt && ` · sent ${new Date(log.sentAt).toLocaleString()}`}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-body font-medium ${statusColor}`}>
+                      {log.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Refund Action */}
         {order.status === "PAID" && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6">
@@ -290,7 +401,7 @@ export default function AdminOrderDetailPage() {
               This will issue a full refund via {order.paymentMethod}.
               {order.paymentMethod === "MPESA" && (
                 <span className="block mt-1 font-medium">
-                  Note: M-Pesa refunds require manual processing in the IntaSend dashboard. The order status will be updated automatically.
+                  Note: M-Pesa refunds require manual processing in the Safaricom Business portal. The order status will be updated automatically.
                 </span>
               )}
             </p>

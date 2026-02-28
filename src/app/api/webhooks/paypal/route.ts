@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifyPayPalWebhook } from "@/lib/paypal";
-import { sendEventConfirmationEmail } from "@/lib/email";
+import {
+  sendDownloadEmail,
+  sendCoachingConfirmationEmail,
+  sendEventConfirmationEmail,
+} from "@/lib/email";
 
 type TierWithEvent = Prisma.TicketTierGetPayload<{
   include: {
@@ -60,29 +64,48 @@ export async function POST(req: NextRequest) {
         data: { status: "PAID", paymentId: captureId ?? order.paymentId },
       });
 
-      if (order.productType === "EVENT" && order.tierId) {
-        const tier = (await prisma.ticketTier.findUnique({
-          where: { id: order.tierId },
-          include: {
-            event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } },
-          },
-        })) as TierWithEvent | null;
-
-        const existingReg = await prisma.eventRegistration.findUnique({
-          where: { orderId: order.id },
-        });
-
-        if (tier && !existingReg) {
-          await prisma.eventRegistration.create({
-            data: {
-              orderId: order.id,
-              eventId: tier.eventId,
-              tierId: order.tierId,
-              seatCount: 1,
+      // Send confirmation emails per product type
+      try {
+        if (order.productType === "BOOK" && order.downloadToken) {
+          await sendDownloadEmail(
+            order.email,
+            order.name,
+            order.productName,
+            order.downloadToken,
+            order.id
+          );
+        } else if (order.productType === "COACHING") {
+          const calendlyUrl =
+            order.calendlyUrl || "https://calendly.com/faith-njahira";
+          await sendCoachingConfirmationEmail(
+            order.email,
+            order.name,
+            order.productName,
+            calendlyUrl,
+            order.id
+          );
+        } else if (order.productType === "EVENT" && order.tierId) {
+          const tier = (await prisma.ticketTier.findUnique({
+            where: { id: order.tierId },
+            include: {
+              event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } },
             },
+          })) as TierWithEvent | null;
+
+          const existingReg = await prisma.eventRegistration.findUnique({
+            where: { orderId: order.id },
           });
 
-          try {
+          if (tier && !existingReg) {
+            await prisma.eventRegistration.create({
+              data: {
+                orderId: order.id,
+                eventId: tier.eventId,
+                tierId: order.tierId,
+                seatCount: 1,
+              },
+            });
+
             await sendEventConfirmationEmail({
               to: order.email,
               name: order.name,
@@ -99,11 +122,12 @@ export async function POST(req: NextRequest) {
                 endTime: s.endTime,
                 timezone: s.timezone,
               })),
+              orderId: order.id,
             });
-          } catch (emailErr) {
-            console.error("Failed to send event confirmation email:", emailErr);
           }
         }
+      } catch (emailErr) {
+        console.error("Failed to send PayPal confirmation email:", emailErr);
       }
     }
 

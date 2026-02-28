@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       order: { status: "PAID" },
     },
     include: {
-      order: { select: { email: true, name: true } },
+      order: { select: { id: true, email: true, name: true } },
       event: { select: { title: true, meetingLink: true } },
     },
   });
@@ -70,6 +70,7 @@ export async function GET(request: NextRequest) {
             timezone: session.timezone,
           },
           meetingLink: reg.event.meetingLink,
+          orderId: reg.orderId,
         });
         sentCount++;
       } catch (err) {

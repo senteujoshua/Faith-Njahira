@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
             order.email,
             order.name,
             order.productName,
-            order.downloadToken
+            order.downloadToken,
+            order.id
           );
         } else if (order.productType === "COACHING") {
           const calendlyUrl =
@@ -64,7 +65,8 @@ export async function POST(req: NextRequest) {
             order.email,
             order.name,
             order.productName,
-            calendlyUrl
+            calendlyUrl,
+            order.id
           );
         } else if (order.productType === "EVENT" && order.tierId) {
           // Prisma Accelerate extension breaks include type inference — cast explicitly
@@ -105,6 +107,7 @@ export async function POST(req: NextRequest) {
                 endTime: s.endTime,
                 timezone: s.timezone,
               })),
+              orderId: order.id,
             });
           }
         }

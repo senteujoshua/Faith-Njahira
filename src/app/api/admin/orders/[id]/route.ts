@@ -17,6 +17,20 @@ export async function GET(
     include: {
       installmentSubscription: true,
       registration: { select: { id: true, seatCount: true, eventId: true } },
+      emails: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          type: true,
+          to: true,
+          subject: true,
+          status: true,
+          resendId: true,
+          error: true,
+          sentAt: true,
+          createdAt: true,
+        },
+      },
     },
   });
 

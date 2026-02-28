@@ -195,7 +195,8 @@ async function handleInvoiceFailed(invoice: Stripe.Invoice) {
       sub.order.name,
       sub.order.productName,
       sub.paidInstallments,
-      sub.totalInstallments
+      sub.totalInstallments,
+      sub.order.id
     );
   } catch (err) {
     console.error("Failed to send installment failure email:", err);
@@ -221,7 +222,8 @@ async function sendConfirmationEmail(order: {
         order.email,
         order.name,
         order.productName,
-        order.downloadToken
+        order.downloadToken,
+        order.id
       );
     } else if (order.productType === "COACHING") {
       const calendlyUrl =
@@ -230,7 +232,8 @@ async function sendConfirmationEmail(order: {
         order.email,
         order.name,
         order.productName,
-        calendlyUrl
+        calendlyUrl,
+        order.id
       );
     }
   } catch (err) {
@@ -298,5 +301,6 @@ async function createEventRegistration(
       endTime: s.endTime,
       timezone: s.timezone,
     })),
+    orderId: order.id,
   });
 }

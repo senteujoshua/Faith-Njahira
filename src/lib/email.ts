@@ -1,21 +1,20 @@
-import { Resend } from "resend";
 import { generateICSBase64 } from "./ics";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { sendEmail } from "./sendEmail";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-const fromEmail = "Faith Njahira <noreply@faithnjahira.com>";
 
 export async function sendDownloadEmail(
   to: string,
   name: string,
   productName: string,
-  downloadToken: string
+  downloadToken: string,
+  orderId?: string
 ) {
   const downloadUrl = `${siteUrl}/api/download/${downloadToken}`;
 
-  await resend.emails.send({
-    from: fromEmail,
+  await sendEmail({
+    emailType: "DOWNLOAD",
+    orderId,
     to,
     subject: `Your download: ${productName}`,
     html: `
@@ -46,10 +45,12 @@ export async function sendCoachingConfirmationEmail(
   to: string,
   name: string,
   sessionName: string,
-  calendlyUrl: string
+  calendlyUrl: string,
+  orderId?: string
 ) {
-  await resend.emails.send({
-    from: fromEmail,
+  await sendEmail({
+    emailType: "COACHING",
+    orderId,
     to,
     subject: `Booking confirmed: ${sessionName}`,
     html: `
@@ -95,10 +96,11 @@ export async function sendEventConfirmationEmail(params: {
   meetingLink?: string | null;
   meetingDetails?: string | null;
   sessions: EventSession[];
+  orderId?: string;
 }) {
   const {
     to, name, eventTitle, tierName, seatCount, orderRef,
-    meetingLink, meetingDetails, sessions,
+    meetingLink, meetingDetails, sessions, orderId,
   } = params;
 
   const icsBase64 = generateICSBase64(
@@ -134,8 +136,9 @@ export async function sendEventConfirmationEmail(params: {
       </div>`
     : "";
 
-  await resend.emails.send({
-    from: fromEmail,
+  await sendEmail({
+    emailType: "CONFIRMATION",
+    orderId,
     to,
     subject: `Registration confirmed: ${eventTitle}`,
     html: `
@@ -170,10 +173,12 @@ export async function sendInstallmentFailedEmail(
   name: string,
   productName: string,
   paidCount: number,
-  totalCount: number
+  totalCount: number,
+  orderId?: string
 ) {
-  await resend.emails.send({
-    from: fromEmail,
+  await sendEmail({
+    emailType: "INSTALLMENT_FAILED",
+    orderId,
     to,
     subject: `Payment failed: ${productName}`,
     html: `
@@ -203,10 +208,12 @@ export async function sendRefundEmail(
   name: string,
   productName: string,
   amount: number,
-  currency: string
+  currency: string,
+  orderId?: string
 ) {
-  await resend.emails.send({
-    from: fromEmail,
+  await sendEmail({
+    emailType: "REFUND",
+    orderId,
     to,
     subject: `Refund processed: ${productName}`,
     html: `
@@ -234,8 +241,9 @@ export async function sendEventReminderEmail(params: {
   eventTitle: string;
   session: EventSession;
   meetingLink?: string | null;
+  orderId?: string;
 }) {
-  const { to, name, eventTitle, session, meetingLink } = params;
+  const { to, name, eventTitle, session, meetingLink, orderId } = params;
   const start = new Date(session.startTime);
   const label = session.title
     ? `Session ${session.sessionNumber}: ${session.title}`
@@ -248,8 +256,9 @@ export async function sendEventReminderEmail(params: {
       </div>`
     : "";
 
-  await resend.emails.send({
-    from: fromEmail,
+  await sendEmail({
+    emailType: "REMINDER",
+    orderId,
     to,
     subject: `Reminder: ${eventTitle} starts tomorrow`,
     html: `
