@@ -85,7 +85,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   try {
     const result = await resend.emails.send({
       from: FROM_EMAIL,
-      reply_to: REPLY_TO,
+      replyTo: REPLY_TO,
       to,
       subject,
       html,
