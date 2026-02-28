@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const FROM_EMAIL =
-  process.env.EMAIL_FROM ?? "Faith Njahira <noreply@faithnjahira.com>";
+  process.env.EMAIL_FROM ?? "Faith Njahira <onboarding@resend.dev>";
+
+// Replies go to this address (e.g. senteujoshua@gmail.com)
+const REPLY_TO = process.env.EMAIL_REPLY_TO;
 
 export type EmailType =
   | "CONFIRMATION"
@@ -82,6 +85,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   try {
     const result = await resend.emails.send({
       from: FROM_EMAIL,
+      reply_to: REPLY_TO,
       to,
       subject,
       html,

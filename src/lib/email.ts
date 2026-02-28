@@ -194,7 +194,7 @@ export async function sendInstallmentFailedEmail(
           Stripe will automatically retry the payment. Please ensure your payment method is up to date.
         </p>
         <p style="color:#A79E9C;font-size:14px;">
-          If you have questions, reply to this email or contact us at contact@faithnjahira.com.
+          If you have questions, reply to this email or contact us at senteujoshua@gmail.com.
         </p>
         <hr style="border:none;border-top:1px solid #EDE7E0;margin:30px 0;" />
         <p style="color:#A79E9C;font-size:12px;">Faith Njahira Wangar\u012b &mdash; faithnjahira.com</p>
