@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, productName, productType, affiliateCode } = await req.json();
+    const { name, email, productName, productType } = await req.json();
 
     if (!name || !email || !productName) {
       return NextResponse.json({ error: "Name, email and product are required" }, { status: 400 });
@@ -26,17 +26,8 @@ export async function POST(req: NextRequest) {
         status: "PAID",
         downloadToken,
         tokenExpiresAt,
-        affiliateCode: affiliateCode || null,
       },
     });
-
-    // Track affiliate if code provided
-    if (affiliateCode) {
-      await prisma.affiliate.updateMany({
-        where: { code: affiliateCode, isActive: true },
-        data: { totalEarnings: { increment: 0 } }, // free product = no commission
-      });
-    }
 
     await sendDownloadEmail(email, name, productName, downloadToken);
 

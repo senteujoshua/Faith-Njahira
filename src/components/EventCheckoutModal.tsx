@@ -1,12 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
 
 interface Tier {
   id: string;
@@ -21,6 +15,7 @@ interface Tier {
   quantityAvailable: number;
   soldCount: number;
   isSaleClosed: boolean;
+  isDefault: boolean;
   maxPerPurchase: number;
   seatsRemaining?: number | null;
 }
@@ -59,8 +54,6 @@ export default function EventCheckoutModal({ eventTitle, tiers, onClose }: Props
   const [error, setError] = useState("");
   const [mpesaStep, setMpesaStep] = useState<"idle" | "polling" | "done">("idle");
   const [mpesaOrderId, setMpesaOrderId] = useState("");
-  // Embedded Stripe checkout state
-  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
 
   const selectedTier = tiers.find((t) => t.id === selectedTierId);
   const isSoldOut =
@@ -112,16 +105,14 @@ export default function EventCheckoutModal({ eventTitle, tiers, onClose }: Props
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId,
-            embedded: true,
             metadata: { seatCount: String(seatCount) },
           }),
         });
-        const stripeData = await stripeRes.json();
-        if (stripeData.clientSecret) {
-          setStripeClientSecret(stripeData.clientSecret);
-          setLoading(false);
+        const stripeData = await stripeRes.json() as { url?: string; error?: string };
+        if (stripeData.url) {
+          window.location.href = stripeData.url;
         } else {
-          setError(stripeData.error || "Failed to create Stripe session.");
+          setError(stripeData.error ?? "Failed to create Stripe session.");
           setLoading(false);
         }
       } else if (paymentMethod === "PAYPAL") {
@@ -179,58 +170,6 @@ export default function EventCheckoutModal({ eventTitle, tiers, onClose }: Props
   };
 
   void mpesaOrderId;
-
-  // ── Stripe Embedded Checkout view ────────────────────────────────────────
-  if (stripeClientSecret) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={onClose}
-        />
-        <div className="relative bg-white w-full sm:max-w-xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col rounded-t-2xl">
-
-          {/* Header */}
-          <div className="relative bg-gradient-to-br from-teal to-slate px-6 pt-6 pb-5 flex-shrink-0">
-            <div className="h-0.5 bg-gradient-to-r from-gold via-yellow-400 to-gold-dark absolute top-0 left-0 right-0" />
-            {/* Back button */}
-            <button
-              onClick={() => setStripeClientSecret(null)}
-              className="absolute top-4 left-4 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-xs font-body font-medium transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <p className="font-body text-white/60 text-xs uppercase tracking-widest mb-1 pl-16">Complete Payment</p>
-            <h2 className="font-heading text-xl font-bold text-white pl-16 pr-10 leading-snug">
-              {eventTitle}
-            </h2>
-          </div>
-
-          {/* Stripe embedded checkout */}
-          <div className="overflow-y-auto flex-1">
-            <EmbeddedCheckoutProvider
-              stripe={stripePromise}
-              options={{ clientSecret: stripeClientSecret }}
-            >
-              <EmbeddedCheckout />
-            </EmbeddedCheckoutProvider>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ── Main form view ────────────────────────────────────────────────────────
   return (

@@ -1,12 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendDownloadEmail, sendCoachingConfirmationEmail, sendEventConfirmationEmail } from "@/lib/email";
 
+type TierWithEvent = Prisma.TicketTierGetPayload<{
+  include: {
+    event: {
+      include: { sessions: true };
+    };
+  };
+}>;
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json() as {
+      invoice_id?: string;
+      state?: string;
+      api_ref?: string;
+    };
 
-    // IntaSend sends callback with invoice_id and state
     const { invoice_id, state, api_ref } = body;
 
     if (!api_ref) {
@@ -25,11 +37,15 @@ export async function POST(req: NextRequest) {
     }
 
     if (state === "COMPLETE" || state === "SUCCESSFUL") {
+      if (order.status === "PAID") {
+        return NextResponse.json({ received: true }); // idempotent
+      }
+
       await prisma.order.update({
         where: { id: order.id },
         data: {
           status: "PAID",
-          paymentId: invoice_id || order.paymentId,
+          paymentId: invoice_id ?? order.paymentId,
         },
       });
 
@@ -43,9 +59,7 @@ export async function POST(req: NextRequest) {
           );
         } else if (order.productType === "COACHING") {
           const calendlyUrl =
-            order.calendlyUrl ||
-            process.env.NEXT_PUBLIC_CALENDLY_URL ||
-            "https://calendly.com/faith-njahira";
+            order.calendlyUrl || "https://calendly.com/faith-njahira";
           await sendCoachingConfirmationEmail(
             order.email,
             order.name,
@@ -53,12 +67,13 @@ export async function POST(req: NextRequest) {
             calendlyUrl
           );
         } else if (order.productType === "EVENT" && order.tierId) {
-          const tier = await prisma.ticketTier.findUnique({
+          // Prisma Accelerate extension breaks include type inference — cast explicitly
+          const tier = (await prisma.ticketTier.findUnique({
             where: { id: order.tierId },
             include: {
               event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } },
             },
-          });
+          })) as TierWithEvent | null;
 
           const existingReg = await prisma.eventRegistration.findUnique({
             where: { orderId: order.id },

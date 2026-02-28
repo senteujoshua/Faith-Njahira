@@ -165,6 +165,69 @@ export async function sendEventConfirmationEmail(params: {
   });
 }
 
+export async function sendInstallmentFailedEmail(
+  to: string,
+  name: string,
+  productName: string,
+  paidCount: number,
+  totalCount: number
+) {
+  await resend.emails.send({
+    from: fromEmail,
+    to,
+    subject: `Payment failed: ${productName}`,
+    html: `
+      <div style="font-family:'Georgia',serif;max-width:600px;margin:0 auto;padding:40px 20px;">
+        <h1 style="color:#1B2A2A;font-size:24px;">Payment Failed, ${name}</h1>
+        <p style="color:#3D4D55;font-size:16px;line-height:1.6;">
+          We were unable to process your installment payment for <strong>${productName}</strong>.
+        </p>
+        <p style="color:#3D4D55;font-size:15px;">
+          You have paid <strong>${paidCount}</strong> of <strong>${totalCount}</strong> installments.
+        </p>
+        <p style="color:#3D4D55;font-size:15px;">
+          Stripe will automatically retry the payment. Please ensure your payment method is up to date.
+        </p>
+        <p style="color:#A79E9C;font-size:14px;">
+          If you have questions, reply to this email or contact us at contact@faithnjahira.com.
+        </p>
+        <hr style="border:none;border-top:1px solid #EDE7E0;margin:30px 0;" />
+        <p style="color:#A79E9C;font-size:12px;">Faith Njahira Wangar\u012b &mdash; faithnjahira.com</p>
+      </div>
+    `,
+  });
+}
+
+export async function sendRefundEmail(
+  to: string,
+  name: string,
+  productName: string,
+  amount: number,
+  currency: string
+) {
+  await resend.emails.send({
+    from: fromEmail,
+    to,
+    subject: `Refund processed: ${productName}`,
+    html: `
+      <div style="font-family:'Georgia',serif;max-width:600px;margin:0 auto;padding:40px 20px;">
+        <h1 style="color:#1B2A2A;font-size:24px;">Refund Confirmed, ${name}</h1>
+        <p style="color:#3D4D55;font-size:16px;line-height:1.6;">
+          Your refund for <strong>${productName}</strong> has been processed.
+        </p>
+        <p style="color:#3D4D55;font-size:15px;">
+          <strong>Refund amount:</strong> ${currency} ${amount.toFixed(2)}
+        </p>
+        <p style="color:#A79E9C;font-size:14px;">
+          Please allow 5–10 business days for the refund to appear on your statement.
+        </p>
+        <hr style="border:none;border-top:1px solid #EDE7E0;margin:30px 0;" />
+        <p style="color:#A79E9C;font-size:12px;">Faith Njahira Wangar\u012b &mdash; faithnjahira.com</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendEventReminderEmail(params: {
   to: string;
   name: string;

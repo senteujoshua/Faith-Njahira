@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { isAuthenticated } from "@/lib/admin-auth";
 
 export async function GET(
@@ -41,7 +42,7 @@ export async function GET(
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
-    }),
+    }) as unknown as Promise<Prisma.EventRegistrationGetPayload<{ include: { order: true; tier: true } }>[]>,
     prisma.eventRegistration.count({ where }),
   ]);
 

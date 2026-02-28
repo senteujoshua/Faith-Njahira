@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { capturePayPalOrder } from "@/lib/paypal";
 import { sendEventConfirmationEmail } from "@/lib/email";
 
@@ -23,10 +24,10 @@ async function handleCapture(request: NextRequest) {
       return NextResponse.redirect(`${siteUrl}/events?error=missing_params`);
     }
 
-    const order = await prisma.order.findUnique({
+    const order = (await prisma.order.findUnique({
       where: { id: orderId },
       include: { tier: { include: { event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } } } } },
-    });
+    })) as Prisma.OrderGetPayload<{ include: { tier: { include: { event: { include: { sessions: true } } } } } }> | null;
 
     if (!order) {
       return NextResponse.redirect(`${siteUrl}/events?error=order_not_found`);

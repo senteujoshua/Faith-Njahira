@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminOrdersPage() {
@@ -42,6 +43,7 @@ export default async function AdminOrdersPage() {
                   <th className="px-6 py-3 text-left text-xs font-body font-semibold text-warm-gray uppercase tracking-wider">
                     Date
                   </th>
+                  <th className="px-6 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -89,6 +91,14 @@ export default async function AdminOrdersPage() {
                     </td>
                     <td className="px-6 py-4 font-body text-sm text-warm-gray whitespace-nowrap">
                       {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="text-sm font-body text-teal hover:text-teal-dark"
+                      >
+                        View
+                      </Link>
                     </td>
                   </tr>
                 ))}

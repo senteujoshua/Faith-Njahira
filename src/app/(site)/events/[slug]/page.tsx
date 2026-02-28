@@ -1,5 +1,13 @@
 import { notFound } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+type EventWithTiersAndSessions = Prisma.EventGetPayload<{
+  include: {
+    tiers: true;
+    sessions: true;
+  };
+}>;
 import EventDetailClient from "./EventDetailClient";
 
 interface Props {
@@ -18,13 +26,13 @@ export const revalidate = 60;
 export default async function EventDetailPage({ params }: Props) {
   const { slug } = await params;
 
-  const event = await prisma.event.findUnique({
+  const event = (await prisma.event.findUnique({
     where: { slug, isActive: true },
     include: {
       tiers: { orderBy: { order: "asc" } },
       sessions: { orderBy: { sessionNumber: "asc" } },
     },
-  });
+  })) as EventWithTiersAndSessions | null;
 
   if (!event) notFound();
 

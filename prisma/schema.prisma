@@ -9,30 +9,45 @@ datasource db {
 }
 
 model Order {
-  id                String              @id @default(cuid())
-  email             String
-  name              String
-  phone             String?
-  productType       String              // BOOK | COACHING | BUNDLE | EVENT
-  productName       String
-  amount            Float
-  currency          String              // KES | USD | GBP
-  paymentMethod     String              // STRIPE | MPESA | FREE | PAYPAL
-  paymentId         String?
-  status            String              @default("PENDING") // PENDING | PAID | FAILED
-  downloadToken     String?             @unique
-  tokenExpiresAt    DateTime?
-  calendlyUrl       String?
-  couponCode        String?
-  discountAmount    Float?              @default(0)
-  affiliateCode     String?
-  installmentPlanId String?
-  installmentPlan   InstallmentPlan?    @relation(fields: [installmentPlanId], references: [id])
-  tierId            String?
-  tier              TicketTier?         @relation(fields: [tierId], references: [id])
-  registration      EventRegistration?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  id                     String                  @id @default(cuid())
+  email                  String
+  name                   String
+  phone                  String?
+  productType            String                  // BOOK | COACHING | BUNDLE | EVENT
+  productName            String
+  amount                 Float
+  currency               String                  // KES | USD | GBP
+  paymentMethod          String                  // STRIPE | MPESA | FREE | PAYPAL
+  paymentId              String?
+  status                 String                  @default("PENDING") // PENDING | PAID | FAILED | REFUNDED
+  downloadToken          String?                 @unique
+  tokenExpiresAt         DateTime?
+  calendlyUrl            String?
+  couponCode             String?
+  discountAmount         Float?                  @default(0)
+  paymentType            String                  @default("ONE_TIME") // ONE_TIME | INSTALLMENT
+  stripeSessionId        String?
+  stripeSubscriptionId   String?
+  refundedAt             DateTime?
+  refundStatus           String?                 // REFUNDED | PARTIAL
+  tierId                 String?
+  tier                   TicketTier?             @relation(fields: [tierId], references: [id])
+  registration           EventRegistration?
+  installmentSubscription InstallmentSubscription?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+}
+
+model InstallmentSubscription {
+  id                   String   @id @default(cuid())
+  orderId              String   @unique
+  order                Order    @relation(fields: [orderId], references: [id])
+  stripeSubscriptionId String   @unique
+  totalInstallments    Int
+  paidInstallments     Int      @default(0)
+  status               String   @default("ACTIVE") // ACTIVE | COMPLETED | FAILED | CANCELED
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 model Event {
@@ -48,6 +63,7 @@ model Event {
   meetingLink    String?
   meetingDetails String?
   extraDetails   String?
+  calendlyUrl    String?
   isActive       Boolean             @default(true)
   order          Int                 @default(0)
   tiers          TicketTier[]
@@ -154,40 +170,6 @@ model Coupon {
   isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-}
-
-model InstallmentPlan {
-  id               String    @id @default(cuid())
-  customerName     String
-  customerEmail    String
-  customerPhone    String?
-  productName      String
-  totalAmountUSD   Float
-  totalAmountKES   Float
-  currency         String    // USD | KES
-  numInstallments  Int       // 2 | 3 | 4
-  amountPerInstall Float
-  paidCount        Int       @default(0)
-  status           String    @default("ACTIVE") // ACTIVE | COMPLETED | DEFAULTED
-  nextDueDate      DateTime?
-  notes            String?
-  payments         Order[]
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-}
-
-model Affiliate {
-  id             String   @id @default(cuid())
-  name           String
-  email          String   @unique
-  code           String   @unique
-  commissionRate Float    @default(10)
-  totalEarnings  Float    @default(0)
-  paidOut        Float    @default(0)
-  isActive       Boolean  @default(true)
-  notes          String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
 }
 
 model Bundle {

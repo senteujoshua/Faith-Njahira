@@ -1,12 +1,44 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description:
-    "Get in touch with Faith Njah\u00eera Wangar\u00ee for consulting inquiries, speaking engagements, academic collaborations, and media requests.",
-};
+import { useState, FormEvent } from "react";
 
 export default function ContactPage() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    org: "",
+    subject: "",
+    message: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json() as { success?: boolean; error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+      } else {
+        setSuccess(true);
+        setForm({ name: "", email: "", org: "", subject: "", message: "" });
+      }
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <>
       {/* Hero */}
@@ -116,108 +148,148 @@ export default function ContactPage() {
               {/* Quote */}
               <div className="bg-teal rounded-xl p-6 mt-8">
                 <blockquote className="font-heading text-lg text-cream italic leading-relaxed">
-                  &ldquo;The work of justice begins with connection \u2014 reaching across divides to build something new together.&rdquo;
+                  &ldquo;The work of justice begins with connection — reaching across divides to build something new together.&rdquo;
                 </blockquote>
               </div>
             </div>
 
             {/* Contact Form */}
             <div className="lg:col-span-3">
-              <form className="bg-white rounded-2xl p-8 md:p-10 border border-cream shadow-sm space-y-6">
-                <h3 className="font-heading text-xl font-bold text-teal mb-2">
-                  Send a Message
-                </h3>
-                <p className="font-body text-slate text-sm mb-6">
-                  Fill out the form below and I&apos;ll respond within 48 hours.
-                </p>
+              {success ? (
+                <div className="bg-white rounded-2xl p-8 md:p-10 border border-cream shadow-sm text-center">
+                  <div className="w-16 h-16 rounded-full bg-teal/10 flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-8 h-8 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </div>
+                  <h3 className="font-heading text-2xl font-bold text-teal mb-3">Message Sent!</h3>
+                  <p className="font-body text-slate text-base mb-6">
+                    Thank you for reaching out. I&apos;ll get back to you within 48 hours.
+                  </p>
+                  <button
+                    onClick={() => setSuccess(false)}
+                    className="px-6 py-3 bg-gold text-white font-body font-semibold rounded-full hover:bg-gold-dark transition-all duration-300"
+                  >
+                    Send Another Message
+                  </button>
+                </div>
+              ) : (
+                <form
+                  onSubmit={handleSubmit}
+                  className="bg-white rounded-2xl p-8 md:p-10 border border-cream shadow-sm space-y-6"
+                >
+                  <h3 className="font-heading text-xl font-bold text-teal mb-2">
+                    Send a Message
+                  </h3>
+                  <p className="font-body text-slate text-sm mb-6">
+                    Fill out the form below and I&apos;ll respond within 48 hours.
+                  </p>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                  {error && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-body text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label htmlFor="name" className="block font-body text-sm font-medium text-teal mb-2">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        required
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+                        placeholder="Your name"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="block font-body text-sm font-medium text-teal mb-2">
+                        Email Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label htmlFor="name" className="block font-body text-sm font-medium text-teal mb-2">
-                      Full Name *
+                    <label htmlFor="org" className="block font-body text-sm font-medium text-teal mb-2">
+                      Organization
                     </label>
                     <input
                       type="text"
-                      id="name"
-                      name="name"
-                      required
+                      id="org"
+                      name="org"
+                      value={form.org}
+                      onChange={(e) => setForm({ ...form, org: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
-                      placeholder="Your name"
+                      placeholder="Your organization (optional)"
                     />
                   </div>
+
                   <div>
-                    <label htmlFor="email" className="block font-body text-sm font-medium text-teal mb-2">
-                      Email Address *
+                    <label htmlFor="subject" className="block font-body text-sm font-medium text-teal mb-2">
+                      Subject <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
+                    <select
+                      id="subject"
+                      name="subject"
                       required
+                      value={form.subject}
+                      onChange={(e) => setForm({ ...form, subject: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
-                      placeholder="your@email.com"
+                    >
+                      <option value="">Select a subject</option>
+                      <option value="consulting">Consulting Inquiry</option>
+                      <option value="speaking">Speaking Engagement</option>
+                      <option value="academic">Academic Collaboration</option>
+                      <option value="media">Media / Press Request</option>
+                      <option value="mentorship">Mentorship / Coaching</option>
+                      <option value="general">General Inquiry</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="block font-body text-sm font-medium text-teal mb-2">
+                      Message <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      rows={6}
+                      required
+                      value={form.message}
+                      onChange={(e) => setForm({ ...form, message: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors resize-none"
+                      placeholder="Tell me about your inquiry, project, or how I can help..."
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label htmlFor="org" className="block font-body text-sm font-medium text-teal mb-2">
-                    Organization
-                  </label>
-                  <input
-                    type="text"
-                    id="org"
-                    name="org"
-                    className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
-                    placeholder="Your organization (optional)"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="subject" className="block font-body text-sm font-medium text-teal mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    id="subject"
-                    name="subject"
-                    required
-                    className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full px-8 py-4 bg-gold text-white font-body font-semibold rounded-full hover:bg-gold-dark transition-all duration-300 shadow-lg shadow-gold/20 disabled:opacity-60"
                   >
-                    <option value="">Select a subject</option>
-                    <option value="consulting">Consulting Inquiry</option>
-                    <option value="speaking">Speaking Engagement</option>
-                    <option value="academic">Academic Collaboration</option>
-                    <option value="media">Media / Press Request</option>
-                    <option value="mentorship">Mentorship / Coaching</option>
-                    <option value="general">General Inquiry</option>
-                  </select>
-                </div>
+                    {submitting ? "Sending..." : "Send Message"}
+                  </button>
 
-                <div>
-                  <label htmlFor="message" className="block font-body text-sm font-medium text-teal mb-2">
-                    Message *
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    rows={6}
-                    required
-                    className="w-full px-4 py-3 rounded-xl border border-cream bg-cream-lightest font-body text-dark text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors resize-none"
-                    placeholder="Tell me about your inquiry, project, or how I can help..."
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full px-8 py-4 bg-gold text-white font-body font-semibold rounded-full hover:bg-gold-dark transition-all duration-300 shadow-lg shadow-gold/20"
-                >
-                  Send Message
-                </button>
-
-                <p className="font-body text-warm-gray text-xs text-center">
-                  Your information will be treated with confidentiality and respect.
-                </p>
-              </form>
+                  <p className="font-body text-warm-gray text-xs text-center">
+                    Your information will be treated with confidentiality and respect.
+                  </p>
+                </form>
+              )}
             </div>
           </div>
         </div>

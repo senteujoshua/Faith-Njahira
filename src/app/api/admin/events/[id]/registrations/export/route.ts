@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { isAuthenticated } from "@/lib/admin-auth";
 
 export async function GET(
@@ -12,14 +13,14 @@ export async function GET(
 
   const { id } = await params;
 
-  const registrations = await prisma.eventRegistration.findMany({
+  const registrations = (await prisma.eventRegistration.findMany({
     where: { eventId: id },
     include: {
       order: { select: { name: true, email: true, phone: true, amount: true, currency: true, status: true, paymentMethod: true, createdAt: true } },
       tier: { select: { name: true } },
     },
     orderBy: { createdAt: "desc" },
-  });
+  })) as Prisma.EventRegistrationGetPayload<{ include: { order: true; tier: true } }>[];
 
   const header = ["Name", "Email", "Phone", "Tier", "Seats", "Amount", "Currency", "Payment Method", "Status", "Registered At"];
   const rows = registrations.map((reg) => [

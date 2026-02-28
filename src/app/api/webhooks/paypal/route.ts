@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { verifyPayPalWebhook } from "@/lib/paypal";
 import { sendEventConfirmationEmail } from "@/lib/email";
+
+type TierWithEvent = Prisma.TicketTierGetPayload<{
+  include: {
+    event: {
+      include: { sessions: true };
+    };
+  };
+}>;
 
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
     const webhookId = process.env.PAYPAL_WEBHOOK_ID!;
 
-    // Convert headers to plain object
     const headers: Record<string, string> = {};
     req.headers.forEach((value, key) => { headers[key] = value; });
 
@@ -18,14 +26,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    const event = JSON.parse(rawBody);
+    const event = JSON.parse(rawBody) as {
+      event_type: string;
+      resource?: {
+        id?: string;
+        supplementary_data?: {
+          related_ids?: { order_id?: string };
+        };
+        purchase_units?: Array<{ reference_id?: string }>;
+      };
+    };
 
     if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
-      const captureId: string = event.resource?.id;
-      const referenceId: string = event.resource?.supplementary_data?.related_ids?.order_id
-        || event.resource?.purchase_units?.[0]?.reference_id;
+      const captureId: string | undefined = event.resource?.id;
+      const referenceId: string | undefined =
+        event.resource?.supplementary_data?.related_ids?.order_id ??
+        event.resource?.purchase_units?.[0]?.reference_id;
 
-      // Find our order by paymentId (captureId) or look up via reference
       let order = captureId
         ? await prisma.order.findFirst({ where: { paymentId: captureId } })
         : null;
@@ -35,20 +52,21 @@ export async function POST(req: NextRequest) {
       }
 
       if (!order || order.status === "PAID") {
-        return NextResponse.json({ received: true }); // idempotent
+        return NextResponse.json({ received: true });
       }
 
       await prisma.order.update({
         where: { id: order.id },
-        data: { status: "PAID", paymentId: captureId || order.paymentId },
+        data: { status: "PAID", paymentId: captureId ?? order.paymentId },
       });
 
-      // Create registration if event order
       if (order.productType === "EVENT" && order.tierId) {
-        const tier = await prisma.ticketTier.findUnique({
+        const tier = (await prisma.ticketTier.findUnique({
           where: { id: order.tierId },
-          include: { event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } } },
-        });
+          include: {
+            event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } },
+          },
+        })) as TierWithEvent | null;
 
         const existingReg = await prisma.eventRegistration.findUnique({
           where: { orderId: order.id },

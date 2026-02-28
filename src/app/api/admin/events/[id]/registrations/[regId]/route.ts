@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { isAuthenticated } from "@/lib/admin-auth";
 import { sendEventConfirmationEmail } from "@/lib/email";
 import { refundPayPalCapture } from "@/lib/paypal";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover",
+  apiVersion: "2026-02-25.clover",
 });
 
 export async function POST(
@@ -20,14 +21,14 @@ export async function POST(
   const { regId } = await params;
   const { action } = await request.json();
 
-  const registration = await prisma.eventRegistration.findUnique({
+  const registration = (await prisma.eventRegistration.findUnique({
     where: { id: regId },
     include: {
       order: true,
       event: { include: { sessions: { orderBy: { sessionNumber: "asc" } } } },
       tier: true,
     },
-  });
+  })) as Prisma.EventRegistrationGetPayload<{ include: { order: true; event: { include: { sessions: true } }; tier: true } }> | null;
 
   if (!registration) {
     return NextResponse.json({ error: "Registration not found" }, { status: 404 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function GET(
   _request: NextRequest,
@@ -7,7 +8,7 @@ export async function GET(
 ) {
   const { slug } = await params;
 
-  const event = await prisma.event.findUnique({
+  const event = (await prisma.event.findUnique({
     where: { slug, isActive: true },
     include: {
       tiers: {
@@ -17,7 +18,7 @@ export async function GET(
         orderBy: { sessionNumber: "asc" },
       },
     },
-  });
+  })) as Prisma.EventGetPayload<{ include: { tiers: true; sessions: true } }> | null;
 
   if (!event) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });

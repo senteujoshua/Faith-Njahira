@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   const orderId = request.nextUrl.searchParams.get("orderId");
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "orderId required" }, { status: 400 });
   }
 
-  const registration = await prisma.eventRegistration.findUnique({
+  const registration = (await prisma.eventRegistration.findUnique({
     where: { orderId },
     include: {
       order: {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
       },
       tier: { select: { name: true } },
     },
-  });
+  })) as Prisma.EventRegistrationGetPayload<{ include: { order: true; event: { include: { sessions: true } }; tier: true } }> | null;
 
   if (!registration) {
     return NextResponse.json({ error: "Registration not found" }, { status: 404 });

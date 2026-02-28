@@ -11,6 +11,12 @@ interface Event {
   coverImage: string | null;
   eventType: string;
   isActive: boolean;
+  isRecurring: boolean;
+  timezone: string;
+  meetingLink: string | null;
+  meetingDetails: string | null;
+  extraDetails: string | null;
+  calendlyUrl: string | null;
   order: number;
   _count: { registrations: number };
   tiers: { id: string; name: string; priceUSD: number; soldCount: number; quantityAvailable: number }[];
@@ -28,6 +34,7 @@ const emptyForm = {
   meetingLink: "",
   meetingDetails: "",
   extraDetails: "",
+  calendlyUrl: "",
   isActive: true,
   order: "0",
 };
@@ -138,11 +145,12 @@ export default function AdminEventsPage() {
       shortDesc: event.shortDesc || "",
       coverImage: event.coverImage || "",
       eventType: event.eventType,
-      isRecurring: false,
-      timezone: "Africa/Nairobi",
-      meetingLink: "",
-      meetingDetails: "",
-      extraDetails: "",
+      isRecurring: event.isRecurring,
+      timezone: event.timezone,
+      meetingLink: event.meetingLink || "",
+      meetingDetails: event.meetingDetails || "",
+      extraDetails: event.extraDetails || "",
+      calendlyUrl: event.calendlyUrl || "",
       isActive: event.isActive,
       order: String(event.order),
     });
@@ -292,6 +300,18 @@ export default function AdminEventsPage() {
                 placeholder="What to bring, prerequisites, etc."
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg font-body text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
               />
+            </div>
+
+            <div>
+              <label className="block font-body text-sm font-medium text-slate mb-1">Calendly URL</label>
+              <input
+                type="url"
+                value={form.calendlyUrl}
+                onChange={(e) => setForm({ ...form, calendlyUrl: e.target.value })}
+                placeholder="https://calendly.com/faith-njahira/session"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg font-body text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
+              />
+              <p className="mt-1 text-xs text-warm-gray font-body">Optional. If set, a scheduling button is shown on the public event page. Leave blank to hide.</p>
             </div>
 
             {/* Cover Image */}

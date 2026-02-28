@@ -27,6 +27,7 @@ export async function PUT(
       meetingLink: data.meetingLink || null,
       meetingDetails: data.meetingDetails || null,
       extraDetails: data.extraDetails || null,
+      calendlyUrl: data.calendlyUrl || null,
       isActive: data.isActive ?? true,
       order: parseInt(data.order) || 0,
     },

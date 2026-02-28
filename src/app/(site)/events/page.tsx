@@ -1,10 +1,18 @@
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+
+type EventWithTiersAndSessions = Prisma.EventGetPayload<{
+  include: {
+    tiers: true;
+    sessions: true;
+  };
+}>;
 
 export const revalidate = 60;
 
 export default async function EventsPage() {
-  const events = await prisma.event.findMany({
+  const events = (await prisma.event.findMany({
     where: { isActive: true },
     orderBy: { order: "asc" },
     include: {
@@ -14,7 +22,7 @@ export default async function EventsPage() {
         take: 1,
       },
     },
-  });
+  })) as EventWithTiersAndSessions[];
 
   return (
     <main className="min-h-screen bg-cream-lightest pt-28 pb-20">
