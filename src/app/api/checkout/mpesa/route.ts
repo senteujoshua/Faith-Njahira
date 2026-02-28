@@ -1,102 +1,124 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { initiateStkPush } from "@/lib/mpesa";
 import crypto from "crypto";
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, name, phone, productType, productName, amount } = body;
 
-    if (!email || !name || !phone || !productName || !amount) {
-      return NextResponse.json(
-        { error: "Missing required fields (phone is required for M-Pesa)" },
-        { status: 400 }
-      );
-    }
+    let orderId: string;
+    let phone: string;
+    let amount: number;
+    let productName: string;
 
-    const downloadToken = crypto.randomUUID();
-    const tokenExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    if (body.orderId) {
+      // EventCheckoutModal flow: order already created, just initiate STK push
+      const { orderId: id, phone: ph, amount: amt } = body as {
+        orderId: string;
+        phone: string;
+        amount: number;
+      };
 
-    const order = await prisma.order.create({
-      data: {
-        email,
-        name,
-        phone,
-        productType: productType || "BOOK",
-        productName,
-        amount: parseFloat(amount),
-        currency: "KES",
-        paymentMethod: "MPESA",
-        status: "PENDING",
-        downloadToken: productType === "BOOK" ? downloadToken : null,
-        tokenExpiresAt: productType === "BOOK" ? tokenExpiresAt : null,
-      },
-    });
+      if (!id || !ph || !amt) {
+        return NextResponse.json(
+          { error: "Missing required fields" },
+          { status: 400 }
+        );
+      }
 
-    // IntaSend STK Push via REST API
-    const isTestMode = process.env.INTASEND_TEST_MODE === "true";
-    const baseUrl = isTestMode
-      ? "https://sandbox.intasend.com"
-      : "https://payment.intasend.com";
+      const existing = await prisma.order.findUnique({ where: { id } });
+      if (!existing) {
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
+      }
 
-    const response = await fetch(`${baseUrl}/api/v1/payment/mpesa-stk-push/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.INTASEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        amount: parseFloat(amount),
-        phone_number: phone,
-        api_ref: order.id,
-        narrative: productName,
-        wallet_id: undefined,
-      }),
-    });
+      orderId = id;
+      phone = ph;
+      amount = parseFloat(String(amt));
+      productName = existing.productName;
 
-    const result = await response.json();
+      // Save phone on order if not already set
+      if (!existing.phone) {
+        await prisma.order.update({ where: { id }, data: { phone } });
+      }
+    } else {
+      // CheckoutModal flow: create order then initiate STK push
+      const { email, name, phone: ph, productType, productName: pn, amount: amt } = body as {
+        email: string;
+        name: string;
+        phone: string;
+        productType?: string;
+        productName: string;
+        amount: number | string;
+      };
 
-    if (!response.ok) {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { status: "FAILED" },
+      if (!email || !name || !ph || !pn || !amt) {
+        return NextResponse.json(
+          { error: "Missing required fields (phone is required for M-Pesa)" },
+          { status: 400 }
+        );
+      }
+
+      const downloadToken = crypto.randomUUID();
+      const tokenExpiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+      const resolvedType = productType || "BOOK";
+
+      const order = await prisma.order.create({
+        data: {
+          email,
+          name,
+          phone: ph,
+          productType: resolvedType,
+          productName: pn,
+          amount: parseFloat(String(amt)),
+          currency: "KES",
+          paymentMethod: "MPESA",
+          status: "PENDING",
+          downloadToken: resolvedType === "BOOK" ? downloadToken : null,
+          tokenExpiresAt: resolvedType === "BOOK" ? tokenExpiresAt : null,
+        },
       });
-      return NextResponse.json(
-        { error: "M-Pesa request failed", details: result },
-        { status: 400 }
-      );
+
+      orderId = order.id;
+      phone = ph;
+      amount = parseFloat(String(amt));
+      productName = pn;
     }
 
+    // Initiate Daraja STK push
+    const { checkoutRequestId } = await initiateStkPush({
+      phone,
+      amount,
+      orderId,
+      description: productName,
+    });
+
+    // Store CheckoutRequestID so the webhook can look up this order
     await prisma.order.update({
-      where: { id: order.id },
-      data: { paymentId: result.invoice?.invoice_id || result.id },
+      where: { id: orderId },
+      data: { paymentId: checkoutRequestId },
     });
 
     return NextResponse.json({
-      orderId: order.id,
-      message: "STK push sent. Check your phone to complete payment.",
-      checkStatusUrl: `${siteUrl}/api/checkout/mpesa?orderId=${order.id}`,
+      orderId,
+      message: "STK push sent to your phone. Enter your M-Pesa PIN to complete payment.",
     });
   } catch (error) {
-    console.error("M-Pesa checkout error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("M-Pesa checkout error:", message);
     return NextResponse.json(
-      { error: "Failed to initiate M-Pesa payment" },
+      { error: "Failed to initiate M-Pesa payment", details: message },
       { status: 500 }
     );
   }
 }
 
-// GET endpoint to check M-Pesa payment status
+// Polling endpoint used by CheckoutModal
 export async function GET(req: NextRequest) {
   const orderId = req.nextUrl.searchParams.get("orderId");
 
   if (!orderId) {
-    return NextResponse.json(
-      { error: "Missing orderId" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
   }
 
   const order = await prisma.order.findUnique({

@@ -60,10 +60,10 @@ export async function POST(
     } else if (order.paymentMethod === "PAYPAL" && order.paymentId) {
       await refundPayPalCapture(order.paymentId);
     } else if (order.paymentMethod === "MPESA") {
-      // IntaSend / M-Pesa reversals require manual processing via the dashboard.
-      // We still update the order status and notify the customer.
+      // Daraja does not provide a programmatic reversal API for STK Push payments.
+      // Process the reversal manually via the Safaricom Business portal.
       console.warn(
-        `M-Pesa refund for order ${order.id} requires manual processing via IntaSend dashboard.`
+        `M-Pesa refund for order ${order.id} requires manual processing via the Safaricom Business portal.`
       );
     }
 
