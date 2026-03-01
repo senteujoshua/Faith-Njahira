@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
+import { FROM_EMAIL } from "@/lib/sendEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FAITH_EMAIL = process.env.CONTACT_RECIPIENT_EMAIL || "contact@faithnjahira.com";
+const FAITH_EMAIL = process.env.CONTACT_RECIPIENT_EMAIL || process.env.EMAIL_REPLY_TO || "senteujoshua@gmail.com";
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     const subjectLabel = subjectLabels[subject] ?? subject;
 
     await resend.emails.send({
-      from: "Website Contact <noreply@faithnjahira.com>",
+      from: FROM_EMAIL,
       to: FAITH_EMAIL,
       replyTo: email,
       subject: `[Contact] ${subjectLabel} — ${name}`,
